@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src https://icy-river-ee0a.jackofbetraya-3016.workers.dev; base-uri 'none'; form-action 'none'">
+<title>JAXX AI｜画像1枚テスト</title>
+<style>
+:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;background:#f5f7fb;color:#171d30}*{box-sizing:border-box}body{margin:0;padding:22px 16px 60px}.wrap{max-width:520px;margin:0 auto}h1{font-size:1.55rem;margin:12px 0 8px}p{line-height:1.6}.note{font-size:.91rem;color:#4b5563;background:#fff7e6;padding:11px 14px;border-radius:12px}.panel{background:#fff;padding:18px;border-radius:18px;box-shadow:0 3px 18px #171d3010;margin-top:16px}label{display:block;font-weight:700;margin:16px 0 7px}input,textarea{font:inherit;width:100%;padding:13px;border:1px solid #9fa9bd;border-radius:10px;background:white;color:#151925}textarea{min-height:110px;resize:vertical}button,.download{display:block;width:100%;border:0;border-radius:12px;background:#245cbb;color:white;text-align:center;text-decoration:none;padding:15px;font-size:1.05rem;font-weight:700;margin-top:16px}button:disabled{opacity:.5}.download{background:#176b4f}.status{margin:14px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}#result{display:none;width:100%;height:auto;border:1px solid #e1e7f0;border-radius:12px;margin:16px 0 0}#save{display:none}.small{font-size:.85rem;color:#626b78}
+</style>
+</head>
+<body><main class="wrap"><h1>JAXX AI｜画像1枚テスト</h1><p>まずはAIで画像を<strong>1枚だけ</strong>作れるか確認します。LINEスタンプ16枚や背景透過の機能は、まだありません。</p>
+<p class="note">合言葉は<strong>この画面だけ</strong>に入力してください。GitHubやChatGPTに書かないでください。画面内で保存する機能はありません。生成するとCloudflareのAI利用枠を消費します。</p>
+<section class="panel"><label for="key">Cloudflareで設定した合言葉</label><input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="JAXX_SECRET の値"><label for="prompt">どんな絵を作る？</label><textarea id="prompt" maxlength="1200">A cute orange persimmon mascot waving hello, simple flat kawaii sticker illustration, clean thick outline, plain white background, full character visible, no text.</textarea><button id="go" type="button">画像を1枚作る</button><p id="status" class="status" role="status" aria-live="polite"></p><img id="result" alt="AIが生成した画像"><a id="save" class="download" download="jaxx-ai-test.png">画像を保存する</a><p class="small">エラーが出たら、合言葉を隠した状態でエラーメッセージだけ教えてください。</p></section>
+</main><script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const go=$('go'),status=$('status'),image=$('result'),save=$('save');
+let previousUrl=null;
+go.addEventListener('click',async()=>{
+ const key=$('key').value.trim(),prompt=$('prompt').value.trim();
+ if(!key){status.textContent='先に合言葉を入力してください。';return;}
+ if(!prompt){status.textContent='作りたい絵を入力してください。';return;}
+ go.disabled=true;status.textContent='画像を作っています。少しお待ちください…';image.style.display='none';save.style.display='none';
+ try{
+  const response=await fetch('https://icy-river-ee0a.jackofbetraya-3016.workers.dev/generate',{
+   method:'POST',mode:'cors',cache:'no-store',headers:{'Content-Type':'application/json','X-JAXX-KEY':key},body:JSON.stringify({prompt})
+  });
+  const data=await response.json();
+  if(!response.ok){throw new Error((data&&data.error)||('HTTP '+response.status));}
+  if(typeof data.imageBase64!=='string'||!data.imageBase64){throw new Error('画像データが返されませんでした。');}
+  const binary=atob(data.imageBase64),bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  if(previousUrl)URL.revokeObjectURL(previousUrl);
+  previousUrl=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
+  image.src=previousUrl;image.style.display='block';save.href=previousUrl;save.style.display='block';status.textContent='画像が1枚できました。';
+ }catch(error){status.textContent='エラー：'+(error instanceof Error?error.message:String(error))+'\nうまくいかない場合は、表示されたエラーだけ教えてください。';}
+ finally{go.disabled=false;}
+});
+})();
+</script></body></html>
