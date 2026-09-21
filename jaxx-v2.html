@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JAXX STICKER MAKER AI準備版</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#16283b;background:#f6f8f7}
+*{box-sizing:border-box} body{margin:0} main{max-width:860px;margin:auto;padding:18px 14px 80px}
+header{background:#114e48;color:#fff;padding:24px 18px;border-radius:0 0 24px 24px}
+header h1{margin:0;font-size:25px} header p{margin:.5em 0 0;color:#d9f1ea;line-height:1.65;font-size:13px}
+.panel{background:#fff;border:1px solid #dce5e0;border-radius:18px;padding:17px;margin-top:16px;box-shadow:0 4px 16px #1232}
+h2{font-size:18px;margin:0 0 12px} h3{font-size:15px;margin:0 0 8px}
+label{display:block;font-weight:700;margin:12px 0 6px}
+input[type=text],input[type=file],select,textarea{width:100%;border:1px solid #c8d7d1;border-radius:12px;padding:12px;font-size:16px;background:#fff;color:#17283c}
+textarea{resize:vertical} button,.button{border:0;border-radius:12px;padding:13px 16px;font-size:16px;font-weight:800;background:#147d70;color:#fff;cursor:pointer;display:inline-block;text-decoration:none}
+button.alt,.button.alt{background:#edf5f2;color:#14564e;border:1px solid #a4c5b9} button.warn{background:#cb604d}
+button:disabled{opacity:.55} .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cardGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.hint{font-size:13px;color:#5a6c79;line-height:1.65}.warnbox{background:#fff5e5;border:1px solid #f0d49d;padding:12px;border-radius:12px;font-size:13px;line-height:1.7}.okbox{background:#eff9f4;border:1px solid #b8dbc8;padding:12px;border-radius:12px;font-size:13px;line-height:1.7}
+.edit{border:1px solid #e1e7e3;border-radius:12px;padding:12px;background:#fbfdfc}.editHead{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}.badge{display:inline-block;background:#edf5f2;color:#14564e;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}.mini{font-size:12px;color:#667873}.preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.preview article{background:#f0f5f2;padding:7px;border-radius:9px;text-align:center;min-width:0}.preview img,.thumbBox img{width:100%;aspect-ratio:370/320;object-fit:contain;background-color:#fff;background-image:linear-gradient(45deg,#ddd 25%,transparent 25%),linear-gradient(-45deg,#ddd 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ddd 75%),linear-gradient(-45deg,transparent 75%,#ddd 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}.preview span{font-size:12px;display:block;overflow-wrap:anywhere}
+.actions{display:flex;flex-wrap:wrap;gap:8px}.metaBox{border:1px solid #d5e1db;border-radius:12px;padding:12px;margin-top:12px}.thumbGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.thumbBox{background:#f7faf8;padding:10px;border-radius:12px;border:1px solid #e1e8e4}.thumbSmall{width:96px !important;height:74px !important;display:block}.copyRow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.status{white-space:pre-wrap;font-size:14px;color:#235a54;margin-top:10px}
+footer{font-size:12px;color:#687975;line-height:1.7;margin-top:18px}.hidden{display:none!important}
+@media(max-width:600px){.grid,.cardGrid,.thumbGrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>JAXX STICKER MAKER</h1>
+  <p>AI準備版｜16種類のセリフ・ポーズ案・AIプロンプト、日本語/英語の登録文、メイン画像・タブ画像、ZIP保存をまとめて管理します。</p>
+</header>
+<main>
+  <section class="panel">
+    <h2>最初に大事なお知らせ</h2>
+    <div class="warnbox">
+      <strong>このGitHub Pages版だけでは、本物のAI画像生成はまだ動きません。</strong><br>
+      理由：GitHub Pagesは静的サイトのため、画像生成APIの秘密鍵を安全に隠せません。<br>
+      そのため今回は、<b>①16個の異なるポーズ案とAI用プロンプトを自動作成</b>、<b>②日本語・英語のタイトル/説明文の自動作成</b>、<b>③メイン画像・タブ画像・ZIPの改善</b>までをこの無料版に追加しています。<br>
+      実際のAIでの16ポーズ自動生成は、あとで<b>Cloudflare Workersなどのバックエンド + 有料API</b>をつなぐ必要があります。
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>① スタンプセットを設計する</h2>
+    <div class="grid">
+      <div>
+        <label for="keyword">キーワード</label>
+        <input id="keyword" type="text" value="釣り" placeholder="例：釣り、日常、安否確認、クリスマス">
+      </div>
+      <div>
+        <label for="count">枚数</label>
+        <select id="count"><option>8</option><option selected>16</option><option>24</option><option>32</option><option>40</option></select>
+      </div>
+    </div>
+    <label for="charName">キャラクター名</label>
+    <input id="charName" type="text" value="まぐにゃん" placeholder="例：まぐにゃん">
+    <label for="charDesc">キャラクター説明</label>
+    <textarea id="charDesc" rows="3">マグロの着ぐるみを着た、元気で食いしん坊な茶白猫。丸い目で、かわいいデフォルメキャラクター。釣りが大好き。</textarea>
+    <div class="grid">
+      <div>
+        <label for="fontColor">文字色</label>
+        <select id="fontColor"><option value="#ffffff">白（黒ふち）</option><option value="#132b3d">濃紺（白ふち）</option><option value="#ffdc4a">黄色（黒ふち）</option></select>
+      </div>
+      <div>
+        <label for="keywordEn">英語キーワード（自動補助用）</label>
+        <input id="keywordEn" type="text" value="fishing" placeholder="例：fishing">
+      </div>
+    </div>
+    <div class="actions">
+      <button id="generatePlan">セリフ・ポーズ案・登録文を自動作成</button>
+      <button id="exportPrompts" class="alt">AIプロンプト一覧を保存</button>
+    </div>
+    <p class="hint">ここでは <b>セリフ</b> と <b>ポーズ案</b> と <b>AI用プロンプト</b> をまとめて作ります。AI未接続でも、この一覧を外部画像生成で使えます。</p>
+    <p id="planStatus" class="status"></p>
+  </section>
+
+  <section class="panel">
+    <h2>② 参考画像・差し替え画像</h2>
+    <label for="referenceImage">参考キャラクター画像（透明PNG推奨）</label>
+    <input id="referenceImage" type="file" accept="image/png,image/webp,image/jpeg,image/*">
+    <div id="referenceInfo" class="hint">まだ参考画像は選択されていません。</div>
+    <div class="okbox" style="margin-top:10px;">
+      <strong>使い分け</strong><br>
+      ・<b>参考画像</b>：ポーズ案の見た目確認や仮プレビューに使います。<br>
+      ・<b>差し替え画像</b>：実際にAIなどで作った16枚の画像があれば、各カードごとに個別アップロードできます。
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>③ 16枚の内容を確認・編集</h2>
+    <div id="cards" class="cardGrid"></div>
+  </section>
+
+  <section class="panel">
+    <h2>④ 仮プレビューとPNG・ZIP</h2>
+    <div class="warnbox">AI未接続のため、個別画像が未設定のカードは「参考画像 + セリフ」で仮プレビューを作ります。<br>本当に違うポーズの完成PNGを使いたい場合は、各カードの「完成画像」欄に画像を入れてください。</div>
+    <div class="actions" style="margin-top:10px;">
+      <button id="build">PNGを作成・プレビュー</button>
+      <button id="downloadZip" class="alt" disabled>ZIPを保存</button>
+    </div>
+    <p id="buildStatus" class="status"></p>
+    <div id="preview" class="preview"></div>
+  </section>
+
+  <section class="panel">
+    <h2>⑤ LINE登録情報（日本語・英語）</h2>
+    <div class="grid">
+      <div>
+        <label for="titleJa">タイトル（日本語・40文字以内）</label>
+        <input id="titleJa" type="text" maxlength="40">
+      </div>
+      <div>
+        <label for="titleEn">Title (English, up to 40 chars)</label>
+        <input id="titleEn" type="text" maxlength="40">
+      </div>
+    </div>
+    <div class="grid">
+      <div>
+        <label for="descJa">説明文（日本語・160文字以内）</label>
+        <textarea id="descJa" rows="4" maxlength="160"></textarea>
+      </div>
+      <div>
+        <label for="descEn">Description (English, up to 160 chars)</label>
+        <textarea id="descEn" rows="4" maxlength="160"></textarea>
+      </div>
+    </div>
+    <div class="grid">
+      <div>
+        <label for="creator">クリエイター名</label>
+        <input id="creator" type="text" value="jaxx works">
+      </div>
+      <div>
+        <label for="copyright">コピーライト</label>
+        <input id="copyright" type="text" value="© jaxx works">
+      </div>
+    </div>
+    <div class="metaBox">
+      <h3>コピーしやすいボタン</h3>
+      <div class="copyRow">
+        <button type="button" class="alt" data-copy="titleJa">日本語タイトルをコピー</button>
+        <button type="button" class="alt" data-copy="descJa">日本語説明文をコピー</button>
+        <button type="button" class="alt" data-copy="titleEn">英語タイトルをコピー</button>
+        <button type="button" class="alt" data-copy="descEn">英語説明文をコピー</button>
+        <button type="button" class="alt" data-copy="creator">クリエイター名をコピー</button>
+        <button type="button" class="alt" data-copy="copyright">コピーライトをコピー</button>
+      </div>
+      <p id="copyStatus" class="hint"></p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>⑥ メイン画像・タブ画像</h2>
+    <div class="grid">
+      <div>
+        <label for="thumbSource">元にするスタンプ</label>
+        <select id="thumbSource"></select>
+      </div>
+      <div>
+        <label for="tabFocus">タブ画像の寄せ方</label>
+        <select id="tabFocus">
+          <option value="top">上寄せ（顔中心）</option>
+          <option value="center">中央寄せ</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions"><button id="refreshThumbs" class="alt">メイン画像・タブ画像を更新</button></div>
+    <div class="thumbGrid" style="margin-top:12px;">
+      <div class="thumbBox"><h3>メイン画像（240×240）</h3><img id="mainPreview" alt="main preview"></div>
+      <div class="thumbBox"><h3>タブ画像（96×74）</h3><img id="tabPreview" class="thumbSmall" alt="tab preview"></div>
+    </div>
+    <p class="hint">タブ画像は、選んだスタンプ画像を顔側が見えやすいように上寄せ/中央寄せで切り出します。</p>
+  </section>
+
+  <section class="panel">
+    <h2>⑦ LINE登録へ進む</h2>
+    <div class="okbox">
+      1. ZIPを保存する<br>
+      2. LINE Creators Marketを開く<br>
+      3. タイトル・説明文（日本語/英語）を貼り付ける<br>
+      4. 画像をアップロードして審査申請する
+    </div>
+    <p style="margin-top:12px;"><a class="button" href="https://creator.line.me/ja/" target="_blank" rel="noopener noreferrer">LINE Creators Marketを開く ↗</a></p>
+  </section>
+
+  <footer>
+    無料の静的Webアプリです。参考画像や完成画像はこの端末内で処理します。<br>
+    <b>本物のAI画像生成をこのアプリに直接追加するには、別途バックエンドと画像生成API料金が必要です。</b>
+  </footer>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const PHRASES={
+  '釣り':['爆釣！','つぬけ達成！','尺アジゲット！','今日はボウズ…','大物ヒット！','バラした！','アタリきた！','入れ食い！','潮目発見！','朝マズメ！','夕マズメ！','ナイスフィッシュ！','もう一投！','エサ忘れた！','ランディング成功！','また釣り行こう！','釣り日和！','尺メバルゲット！','リリースします','今日は渋い…','時合い到来！','ライン切れた！','根掛かりした！','新しいルアー！','満潮だ！','干潮だ！','風が強い！','釣果報告！','フッキング成功！','お魚ありがとう！','いい引き！','またリベンジ！','夜釣り最高！','釣り場到着！','準備完了！','安全第一！','やっと釣れた！','潮が動いた！','もう帰る？','ラスト一投！'],
+  '日常':['おはよう！','こんにちは！','こんばんは！','ありがとう！','了解です！','おつかれさま','よろしくね','おやすみ！','ごめんね','大丈夫？','今向かってる','あとで連絡するね','いいね！','やったー！','びっくり！','またね！','おめでとう！','助かります','少し待ってね','今何してる？','無理しないでね','おなかすいた','楽しみ！','よかった！','承知しました','また明日！','お先に失礼します','気をつけて！','お返事待ってます','ありがとうございます','頑張って！','応援してるよ','それな！','今帰るね','休憩中','また連絡する！','お仕事中','はーい！','なるほど！','おねがい！'],
+  '安否確認':['元気にしてる？','大丈夫？','ご飯食べた？','無理しないでね','体調どう？','電話できる？','おはよう！','おやすみ！','ありがとう！','気をつけてね','寒くない？','暑くない？','ゆっくり休んでね','あとで連絡するね','何か困ってない？','また連絡するね','水分とってね','今日はどうだった？','何か必要？','近いうちに会おう','帰宅した？','よく眠れた？','今日は休んでね','いつでも連絡してね','買い物いる？','家にいる？','お昼食べた？','病院どうだった？','外出気をつけて','心配してるよ','声が聞きたいな','手伝えることある？','元気ならよかった','何時に帰る？','無理せずね','お茶飲んでね','明日電話するね','また顔見せてね','困ったら呼んでね','いつもありがとう'],
+  'クリスマス':['メリークリスマス！','サンタが来た！','プレゼントだよ','素敵な夜を！','クリスマス最高！','乾杯！','ケーキ食べよう','ツリー飾った？','ハッピーホリデー！','良い子にしてた？','雪だるま作ろう','ワクワクするね','暖かくしてね','素敵な贈り物！','また来年！','幸せな時間を','パーティーしよう','楽しみだね！','鐘が鳴るよ','トナカイ出発！','星がきれい','ありがとうサンタ','おうちでのんびり','ごちそうだ！','雪降るかな？','サプライズ！','赤い帽子だよ','靴下用意した？','今年もありがとう','家族で過ごそう','イルミネーション！','冬のご挨拶','ホットチョコ！','チキン食べよう','良い夜を！','もうすぐクリスマス','今年も会えたね','温まってね','楽しんでね！','大切なあなたへ']
+};
+const POSES={
+  '釣り':['釣り竿を高く掲げて大喜び','魚を両手で見せて自慢する','クーラーボックスを指さして笑う','空のバケツを見てしょんぼりする','大きくのけぞって強い引きに耐える','頭を抱えて悔しがる','ウキを見つめて前のめりになる','たくさんの魚に囲まれてはしゃぐ','水面を指さして真剣な顔をする','朝日を浴びて元気よく手を振る','夕焼けの中で満足げにうなずく','親指を立てて魚を掲げる','気合いを入れて前を指さす','忘れ物に気づいて焦る','タモ網で魚をすくって笑う','釣り竿を担いで手を振る'],
+  '日常':['元気に手を振る','軽くおじぎする','片手を上げてあいさつする','笑顔でハートを作る','親指を立てる','両手を合わせる','小さくガッツポーズする','眠そうに目を閉じる','しょんぼりとうつむく','心配そうに見つめる','小走りで向かうポーズ','スマホを見ながら手を振る','キラキラした目で喜ぶ','ジャンプして喜ぶ','びっくりして飛び上がる','笑顔で振り返る'],
+  '安否確認':['やさしくのぞき込む','心配そうに両手を胸に当てる','ご飯茶碗を持って確認する','手を広げて無理しないでと伝える','おでこに手を当てて様子を見る','スマホを持って電話するポーズ','朝のあいさつで手を振る','眠るしぐさをする','深くおじぎする','手で気をつけての合図をする','毛布にくるまって心配する','うちわを持って気遣う','座って休んでと勧める','あとで連絡する合図をする','首をかしげて問いかける','やさしく手を振る'],
+  'クリスマス':['サンタ帽で手を振る','プレゼントを抱える','プレゼントを差し出す','星を見上げてほほえむ','両手を広げて大喜び','乾杯する','ケーキを見せる','ツリーを指さす','雪の中で手を振る','ひみつだよのポーズ','雪だるまと並ぶ','目を輝かせて見上げる','マフラーをぎゅっと持つ','贈り物を抱きしめる','笑顔で振り返る','両手を広げて祝う']
+};
+const KEYWORD_EN_MAP={'釣り':'fishing','日常':'daily life','安否確認':'well-being check','クリスマス':'Christmas'};
+let categoryName='釣り';
+let referenceBitmap=null;
+let plans=[]; // {phrase,pose,prompt,file,bitmap,generatedCanvas,url}
+let zipFiles=[];
+let mainCanvas=null, tabCanvas=null;
+
+function detectCategory(text){
+  const s=(text||'').trim();
+  if(/釣|魚|ルアー|アジ|メバル/.test(s)) return '釣り';
+  if(/安否|親|健康|体調/.test(s)) return '安否確認';
+  if(/クリスマス|サンタ|冬/.test(s)) return 'クリスマス';
+  if(/日常|あいさつ|挨拶|会話/.test(s)) return '日常';
+  return '日常';
+}
+function safeShort(str,n){return (str||'').replace(/\s+/g,' ').trim().slice(0,n)}
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function buildEnglishTitle(name,keyEn){
+  const raw=`${name} ${keyEn}`.trim();
+  return raw.length<=40?raw:raw.slice(0,40);
+}
+function buildEnglishDesc(name,keyEn,count){
+  let s=`A set of ${count} LINE stickers featuring ${name}, perfect for ${keyEn}. Includes expressive messages for everyday chatting.`;
+  return s.length<=160?s:s.slice(0,160);
+}
+function buildJapaneseDesc(name,key,count,charDesc){
+  let core=safeShort(charDesc,40);
+  let s=`${name}のLINEスタンプ。${key}の場面で使いやすい${count}種類のスタンプです。${core}`;
+  return s.length<=160?s:s.slice(0,160);
+}
+function phraseToEnglish(p){
+  const map={
+    '爆釣！':'Big catch!','つぬけ達成！':'Ten fish caught!','尺アジゲット！':'Caught a big horse mackerel!','今日はボウズ…':'No catch today...','大物ヒット！':'Big one on!','バラした！':'Lost it!','アタリきた！':'Got a bite!','入れ食い！':'They are biting!','潮目発見！':'Found the current line!','朝マズメ！':'Morning prime time!','夕マズメ！':'Evening prime time!','ナイスフィッシュ！':'Nice fish!','もう一投！':'One more cast!','エサ忘れた！':'Forgot the bait!','ランディング成功！':'Landed it!','また釣り行こう！':'Let\'s go fishing again!'
+  };
+  return map[p]||p;
+}
+function fillMetadata(){
+  const key=$('keyword').value.trim()||categoryName;
+  const keyEn=$('keywordEn').value.trim()||KEYWORD_EN_MAP[categoryName]||'stickers';
+  const name=safeShort($('charName').value,20)||'Character';
+  const count=plans.length||Number($('count').value);
+  $('titleJa').value=safeShort(`${key}好きの${name}`,40);
+  $('titleEn').value=buildEnglishTitle(name,keyEn);
+  $('descJa').value=buildJapaneseDesc(name,key,count,$('charDesc').value);
+  $('descEn').value=buildEnglishDesc(name,keyEn,count);
+}
+function buildPrompt(phrase,pose,index){
+  const name=$('charName').value.trim()||'character';
+  const desc=$('charDesc').value.trim()||'cute chibi character';
+  return `Create a LINE sticker illustration with transparent background. Character: ${name}. Character description: ${desc}. Pose/action: ${pose}. Japanese text on sticker: "${phrase}". Cute chibi style, clean outline, readable lettering, high contrast, centered composition, leave safe margins, one sticker only. Variant number ${index+1}.`;
+}
+function renderCards(){
+  const area=$('cards'); area.innerHTML='';
+  $('thumbSource').innerHTML='';
+  plans.forEach((p,i)=>{
+    const div=document.createElement('div'); div.className='edit';
+    div.innerHTML=`
+      <div class="editHead"><strong>${String(i+1).padStart(2,'0')}枚目</strong><span class="badge">${escapeHtml(categoryName)}</span></div>
+      <label>セリフ</label>
+      <input type="text" id="phrase_${i}" maxlength="36" value="${escapeHtml(p.phrase)}">
+      <label>ポーズ案</label>
+      <textarea id="pose_${i}" rows="2">${escapeHtml(p.pose)}</textarea>
+      <label>AI用プロンプト</label>
+      <textarea id="prompt_${i}" rows="5">${escapeHtml(p.prompt)}</textarea>
+      <label>完成画像（任意・このカードだけ差し替え）</label>
+      <input type="file" id="file_${i}" accept="image/png,image/webp,image/jpeg,image/*">
+      <div class="mini" id="fileinfo_${i}">未設定</div>
+    `;
+    area.appendChild(div);
+    $('thumbSource').insertAdjacentHTML('beforeend',`<option value="${i}">${String(i+1).padStart(2,'0')} ${escapeHtml(p.phrase)}</option>`);
+    div.querySelector(`#phrase_${i}`).addEventListener('input',e=>{plans[i].phrase=e.target.value; plans[i].prompt=buildPrompt(plans[i].phrase,plans[i].pose,i); div.querySelector(`#prompt_${i}`).value=plans[i].prompt;});
+    div.querySelector(`#pose_${i}`).addEventListener('input',e=>{plans[i].pose=e.target.value; plans[i].prompt=buildPrompt(plans[i].phrase,plans[i].pose,i); div.querySelector(`#prompt_${i}`).value=plans[i].prompt;});
+    div.querySelector(`#prompt_${i}`).addEventListener('input',e=>{plans[i].prompt=e.target.value;});
+    div.querySelector(`#file_${i}`).addEventListener('change', async e=>{
+      const f=e.target.files[0];
+      if(!f){plans[i].file=null; plans[i].bitmap=null; $(`fileinfo_${i}`).textContent='未設定'; return;}
+      try{
+        const bm=await createImageBitmap(f);
+        plans[i].file=f; plans[i].bitmap=bm; plans[i].url='';
+        $(`fileinfo_${i}`).textContent=`${f.name}（${bm.width}×${bm.height}px）`;
+      }catch(err){$(`fileinfo_${i}`).textContent='読込失敗';}
+    });
+  });
+}
+function makePlan(){
+  categoryName=detectCategory($('keyword').value);
+  if(!$('keywordEn').value.trim()) $('keywordEn').value=KEYWORD_EN_MAP[categoryName]||'stickers';
+  const count=Number($('count').value);
+  const phrases=(PHRASES[categoryName]||PHRASES['日常']).slice(0,count);
+  const posesBase=POSES[categoryName]||POSES['日常'];
+  plans=phrases.map((phrase,i)=>({phrase,pose:posesBase[i%posesBase.length],prompt:buildPrompt(phrase,posesBase[i%posesBase.length],i),file:null,bitmap:null,url:''}));
+  renderCards();
+  fillMetadata();
+  $('planStatus').textContent=`「${categoryName}」の${count}件を作成しました。各カードでセリフ・ポーズ案・AIプロンプトを自由に直せます。`;
+}
+function canvas(w,h){const c=document.createElement('canvas'); c.width=w; c.height=h; return c;}
+function fitImage(ctx,img,box,offsetY=0){
+  const iw=img.width, ih=img.height, s=Math.min(box.w/iw, box.h/ih); const w=iw*s, h=ih*s;
+  ctx.drawImage(img, box.x+(box.w-w)/2, box.y+(box.h-h)/2+offsetY, w, h);
+}
+function coverImage(ctx,img,box,anchor='center'){
+  const iw=img.width, ih=img.height, s=Math.max(box.w/iw, box.h/ih); const w=iw*s, h=ih*s;
+  let dx=box.x+(box.w-w)/2, dy=box.y+(box.h-h)/2;
+  if(anchor==='top') dy=box.y;
+  ctx.drawImage(img,dx,dy,w,h);
+}
+function drawText(ctx,text,w,h){
+  const phrase=(text||'').trim(); if(!phrase) return;
+  const maxWidth=w-34; let size=42, lines=[];
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(; size>=17; size--){
+    ctx.font=`900 ${size}px -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif`;
+    lines=[]; let row='';
+    for(const ch of phrase){
+      if(ctx.measureText(row+ch).width>maxWidth && row){ lines.push(row); row=ch; }
+      else row+=ch;
+    }
+    if(row) lines.push(row);
+    if(lines.length<=2 && lines.every(x=>ctx.measureText(x).width<=maxWidth)) break;
+  }
+  ctx.lineJoin='round'; ctx.lineWidth=5;
+  ctx.strokeStyle=$('fontColor').value==='#132b3d' ? '#ffffff' : '#273143';
+  ctx.fillStyle=$('fontColor').value;
+  const ys=lines.length===1?[274]:[250,290];
+  lines.forEach((line,i)=>{ctx.strokeText(line,w/2,ys[i]); ctx.fillText(line,w/2,ys[i]);});
+}
+function drawVariantReference(ctx,img,variantIndex){
+  ctx.save();
+  const settings=[
+    {x:0,y:0,rot:0,scale:1,flip:1},{x:-8,y:0,rot:-0.05,scale:0.98,flip:1},{x:8,y:0,rot:0.05,scale:0.98,flip:1},
+    {x:0,y:4,rot:-0.03,scale:0.95,flip:-1},{x:0,y:-2,rot:0.04,scale:1.02,flip:1},{x:-5,y:3,rot:0.08,scale:0.94,flip:-1},
+    {x:7,y:2,rot:-0.08,scale:0.94,flip:1},{x:0,y:-6,rot:0.02,scale:1.04,flip:1}
+  ][variantIndex%8];
+  ctx.translate(185+settings.x,120+settings.y); ctx.scale(settings.flip*settings.scale,settings.scale); ctx.rotate(settings.rot);
+  ctx.drawImage(img,-150,-100,300,200); ctx.restore();
+}
+function getSourceBitmap(i){ return plans[i].bitmap || referenceBitmap; }
+function makeStickerCanvas(i){
+  const c=canvas(370,320), ctx=c.getContext('2d');
+  const src=getSourceBitmap(i);
+  if(!src) throw new Error('参考画像または完成画像がありません。');
+  if(plans[i].bitmap){ fitImage(ctx,src,{x:15,y:12,w:340,h:220}); }
+  else { drawVariantReference(ctx,src,i); }
+  drawText(ctx,plans[i].phrase,370,320);
+  return c;
+}
+function makeMainCanvas(sourceCanvas){
+  const c=canvas(240,240), ctx=c.getContext('2d');
+  coverImage(ctx,sourceCanvas,{x:0,y:0,w:240,h:240},'center');
+  return c;
+}
+function makeTabCanvas(sourceCanvas){
+  const c=canvas(96,74), ctx=c.getContext('2d');
+  const anchor=$('tabFocus').value;
+  coverImage(ctx,sourceCanvas,{x:0,y:0,w:96,h:74},anchor);
+  return c;
+}
+function toBlob(c){return new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('PNG変換失敗')),'image/png'))}
+const BYTES_LIMIT=1000000;
+async function makeEntry(name,c){const b=await toBlob(c); if(b.size>BYTES_LIMIT) throw new Error(`${name} が1MBを超えました。`); return {name,bytes:new Uint8Array(await b.arrayBuffer()),url:URL.createObjectURL(b)};}
+$('referenceImage').addEventListener('change', async e=>{
+  const f=e.target.files[0]; referenceBitmap=null;
+  if(!f){$('referenceInfo').textContent='まだ参考画像は選択されていません。'; return;}
+  try{
+    const bm=await createImageBitmap(f); referenceBitmap=bm;
+    $('referenceInfo').textContent=`${f.name} を読み込みました（${bm.width}×${bm.height}px）。`;
+  }catch(err){ $('referenceInfo').textContent='画像を読み込めませんでした。'; }
+});
+$('generatePlan').addEventListener('click',()=>{makePlan();});
+$('exportPrompts').addEventListener('click',()=>{
+  if(!plans.length) makePlan();
+  const payload={
+    keyword:$('keyword').value, character:$('charName').value, characterDescription:$('charDesc').value,
+    titleJa:$('titleJa').value, titleEn:$('titleEn').value, descJa:$('descJa').value, descEn:$('descEn').value,
+    prompts:plans.map((p,i)=>({no:i+1,phrase:p.phrase,pose:p.pose,prompt:p.prompt,englishPhrase:phraseToEnglish(p.phrase)}))
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='jaxx-ai-prompts.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+  $('planStatus').textContent='AIプロンプト一覧を jaxx-ai-prompts.json として保存しました。';
+});
+$('build').addEventListener('click', async ()=>{
+  if(!plans.length) makePlan();
+  if(!referenceBitmap && !plans.some(p=>p.bitmap)) { $('buildStatus').textContent='参考画像または各カードの完成画像を少なくとも1つ用意してください。'; return; }
+  const phrases=plans.map(p=>p.phrase.trim());
+  const normalized=phrases.map(x=>x.replace(/[\s\p{P}\p{S}]/gu,'').toLowerCase());
+  if(new Set(normalized).size!==normalized.length){ $('buildStatus').textContent='重複したセリフがあります。'; return; }
+  $('build').disabled=true; $('downloadZip').disabled=true; $('preview').innerHTML=''; $('buildStatus').textContent='PNGを作成しています…'; zipFiles=[];
+  try{
+    for(let i=0;i<plans.length;i++){
+      const canvasSticker=makeStickerCanvas(i); plans[i].generatedCanvas=canvasSticker;
+      const entry=await makeEntry(String(i+1).padStart(2,'0')+'.png',canvasSticker); zipFiles.push(entry); plans[i].url=entry.url;
+      const card=document.createElement('article'); card.innerHTML=`<img alt="${escapeHtml(plans[i].phrase)}"><span>${String(i+1).padStart(2,'0')} ${escapeHtml(plans[i].phrase)}</span>`; card.querySelector('img').src=entry.url; $('preview').append(card);
+      $('buildStatus').textContent=`${i+1}/${plans.length}枚作成中…`;
+      await new Promise(r=>setTimeout(r,0));
+    }
+    const sourceIndex=Number($('thumbSource').value||0);
+    const sourceCanvas=plans[sourceIndex]?.generatedCanvas || plans[0].generatedCanvas;
+    mainCanvas=makeMainCanvas(sourceCanvas); tabCanvas=makeTabCanvas(sourceCanvas);
+    const mainEntry=await makeEntry('main.png',mainCanvas); const tabEntry=await makeEntry('tab.png',tabCanvas); zipFiles.push(mainEntry,tabEntry);
+    $('mainPreview').src=mainEntry.url; $('tabPreview').src=tabEntry.url;
+    $('buildStatus').textContent=`${zipFiles.length}枚（スタンプ${plans.length} + main + tab）を作成しました。ZIP保存できます。`;
+    $('downloadZip').disabled=false;
+  }catch(err){ $('buildStatus').textContent='作成を停止しました：'+err.message; }
+  finally{ $('build').disabled=false; }
+});
+$('refreshThumbs').addEventListener('click', async ()=>{
+  const sourceIndex=Number($('thumbSource').value||0);
+  let srcCanvas=plans[sourceIndex]?.generatedCanvas;
+  if(!srcCanvas){
+    try{ srcCanvas=makeStickerCanvas(sourceIndex); } catch(err){ $('buildStatus').textContent='先に参考画像を設定するかPNGを作成してください。'; return; }
+  }
+  mainCanvas=makeMainCanvas(srcCanvas); tabCanvas=makeTabCanvas(srcCanvas);
+  $('mainPreview').src=mainCanvas.toDataURL('image/png'); $('tabPreview').src=tabCanvas.toDataURL('image/png');
+});
+const crcTable=(()=>{let t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t;})();
+function crc32(bytes){let c=0xffffffff; for(const b of bytes) c=crcTable[(c^b)&255]^(c>>>8); return (c^0xffffffff)>>>0;}
+function pack16(v){return [v&255,(v>>>8)&255]} function pack32(v){return [v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255]}
+function zip(files){const out=[],central=[]; let offset=0; const enc=new TextEncoder();
+  function put(a,target=out){const v=new Uint8Array(a); target.push(v); return v.length;}
+  for(const file of files){const name=enc.encode(file.name), b=file.bytes, crc=crc32(b); const head=[...pack32(0x04034b50),...pack16(20),...pack16(0),...pack16(0),...pack16(0),...pack16(0),...pack32(crc),...pack32(b.length),...pack32(b.length),...pack16(name.length),...pack16(0)]; const local=offset; offset+=put(head)+put(name)+put(b); put([...pack32(0x02014b50),...pack16(20),...pack16(20),...pack16(0),...pack16(0),...pack16(0),...pack16(0),...pack32(crc),...pack32(b.length),...pack32(b.length),...pack16(name.length),...pack16(0),...pack16(0),...pack16(0),...pack16(0),...pack32(0),...pack32(local)],central); put(name,central); }
+  const centralSize=central.reduce((a,b)=>a+b.length,0);
+  return new Blob([...out,...central,new Uint8Array([...pack32(0x06054b50),...pack16(0),...pack16(0),...pack16(files.length),...pack16(files.length),...pack32(centralSize),...pack32(offset),...pack16(0)])],{type:'application/zip'});
+}
+$('downloadZip').addEventListener('click',()=>{
+  if(!zipFiles.length){$('buildStatus').textContent='先にPNGを作成してください。'; return;}
+  const metaText=`TITLE_JA=${$('titleJa').value}\nTITLE_EN=${$('titleEn').value}\nDESC_JA=${$('descJa').value}\nDESC_EN=${$('descEn').value}\nCREATOR=${$('creator').value}\nCOPYRIGHT=${$('copyright').value}`;
+  const metaBytes=new TextEncoder().encode(metaText);
+  const bundle=[...zipFiles,{name:'registration-info.txt',bytes:metaBytes,url:''}];
+  const blob=zip(bundle); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='jaxx-stickers-ai-ready.zip'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+  $('buildStatus').textContent='ZIPを保存しました。iPhoneの「ファイル」→「ダウンロード」を確認してください。';
+});
+document.querySelectorAll('[data-copy]').forEach(btn=>btn.addEventListener('click', async ()=>{
+  const el=$(btn.dataset.copy); try{ await navigator.clipboard.writeText(el.value); $('copyStatus').textContent='コピーしました：'+el.value; }
+  catch(e){ el.focus(); el.select(); $('copyStatus').textContent='コピーできない場合は、選択された文字を長押ししてコピーしてください。'; }
+}));
+makePlan();
+</script>
+</body>
+</html>
